@@ -2,7 +2,7 @@
   "name": "swift-add-documentation",
 	"displayName": "SwiftAddDocumentation",
 	"description": "Generate documentation template for methods, classes etc.",
-	"version": "0.0.1",
+	"version": "0.0.2",
     "publisher": "FredAPackages",
     "icon": "icon.png",
 	"engines": {
@@ -12,25 +12,47 @@
 		"Programming Languages"
 	],
 	"activationEvents": [
+        "onLanguage:swift",
         "onCommand:swift-add-documentation.register"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "swift-add-documentation.register",
-				"title": "SwiftAddDocumentation"
-			}
-		]
+				"command": "swift-add-documentation.addDocumentation",
+				"title": "Add documentation template"
+			},
+            {
+                "command": "swift-add-documentation.addCommentLine",
+                "title": "Add documentation/comment line"
+            },
+            {
+                "command": "swift-add-documentation.addIndentedCommentLine",
+                "title": "Add indented documentation/comment line"
+            }
+		],
+        "keybindings": [
+            {
+                "command": "swift-add-documentation.addDocumentation",
+                "key": "Alt+Win+/",
+                "mac": "Alt+Cmd+/",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "swift-add-documentation.addCommentLine",
+                "key": "shift+enter",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "swift-add-documentation.addIndentedCommentLine",
+                "key": "shift+alt+enter",
+                "when": "editorTextFocus"
+            }
+        ]
 	},
-    "keybindings": [
-        {
-            "command": "swift-add-documentation.register",
-            "key": "Alt+Win+/",
-            "mac": "Alt+Cmd+/",
-            "when": "editorTextFocus"
-        }
-    ],
+    "dependencies": {
+        "vscode-nls": "^5.0.0"
+    },
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",

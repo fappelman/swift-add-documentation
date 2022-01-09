@@ -3,6 +3,15 @@ import { commentRegex, emptyRegex } from '../Parser/regexPatterns';
 
 const MAX_LINES_LOOKAHEAD = 10;
 
+export enum LineType {
+    commentLine = "commentLine",                        // A line that starts with '//' and not '///'
+    emptyDocumentationLine="emptyDocumentationLine",    // A line that starts with '///' and does have only white space following
+    documentationLine="documentationLine",              // A line that starts with '///' and has not white space following
+    codeLine="codeLine",                                // A non empty line that is not a comment or documentation line
+    emptyLine="emptyLine",                              // A line with only whitespace
+    nonExisting="nonExisting"                           // A line that does not exist
+};
+
 export class Editor {
     editor: vscode.TextEditor;
 
@@ -12,6 +21,16 @@ export class Editor {
 
     public get lineNumber(): number {
         return this.editor.selection.active.line;
+    }
+
+    public lineType(lineNumber: number): LineType {
+        if (lineNumber >= this.lineCount) { return LineType.nonExisting; }
+        const line = this.editor.document.lineAt(lineNumber).text;
+        if (/^\s*\/\/\/\s*$/.test(line)) { return LineType.emptyDocumentationLine; }
+        if (/^\s*\/\/\//.test(line)) { return LineType.documentationLine; }
+        if (/^\s*\/\//.test(line)) { return LineType.commentLine; }
+        if (/^\s*$/.test(line)) { return LineType.emptyLine; }
+        return LineType.codeLine;
     }
 
     public get lineCount(): number {
@@ -48,27 +67,39 @@ export class Editor {
         return match !== null;
     }
 
+    // Get the offset for the current line
+    public get offset(): number {
+        const regex = /^(\s*)/;
+        const currentLine = this.editor.document.lineAt(this.lineNumber).text;
+        let match = regex.exec(currentLine);
+        if (match) {
+            return match[0].length;
+        } else {
+            return 0;
+        }
+    }
 
     // Look up to MAX_LINES_LOOKAHEAD lines ahead and return the concatenated
     // result. Skip the comment lines and empty lines.
     // Limit leading white space to one space. Also for trailing whitespace.
-    public lookaheadLine(): string {
+    public lookaheadLine(startingLine: number): string {
         // Extract the current line
-        var currentLine: number = this.currentLineIsEmpty ? this.lineNumber + 1 : this.lineNumber;
+        // var lineIndex: number = this.currentLineIsEmpty ? this.lineNumber + 1 : this.lineNumber;
+        var lineIndex: number = startingLine;
         var result: string = "";
-        if ((currentLine) < this.lineCount) {
-            result = this.editor.document.lineAt(currentLine).text;
-        }
 
         // Concattenate up to MAX_LINES_LOOKAHEAD lines to the result
         for (let counter = 0; counter < MAX_LINES_LOOKAHEAD; counter++) {
-            const index = currentLine + 1 + counter;
+            const index = lineIndex + counter;
             if (index < this.lineCount) {
                 const line = this.editor.document.lineAt(index).text;
                 if (commentRegex.test(line)) { continue; }
                 if (emptyRegex.test(line)) { continue; }
-
-                result += line.replace(/^\s*/, ' ').replace(/\s*$/, ' ');
+                if (counter === 0) {
+                    result += line.replace(/\s*$/, ' ');
+                } else {
+                    result += line.replace(/^\s*/, ' ').replace(/\s*$/, ' ');
+                }
             }
         }
         return result;

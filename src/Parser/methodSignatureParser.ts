@@ -42,8 +42,6 @@ export class MethodType {
             result.push(`/// - Returns: \${${positionCounter++}:description}`);
         }
 
-        // Add the offset to each of the lines
-
         const spaces = "".padStart(offset, " ");
 
         return result.map((value) => spaces + value).join("\n") + "\n";
